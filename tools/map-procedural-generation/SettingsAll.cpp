@@ -12,6 +12,8 @@ void SettingsAll::putDefaultSettings(QSettings &settings)
     //do tile to zone converter
     if(!settings.contains("displaycity"))
         settings.setValue("displaycity",false);
+    if(!settings.contains("displayregion"))
+        settings.setValue("displayregion",false);
     if(!settings.contains("scale_City"))
         settings.setValue("scale_City",1.0);
     if(!settings.contains("doallmap"))
@@ -84,6 +86,18 @@ void SettingsAll::putDefaultSettings(QSettings &settings)
     settings.endGroup();
     settings.endGroup();
 
+    settings.beginGroup("room");
+    settings.beginGroup("furniture");
+
+    settings.endGroup();
+    settings.beginGroup("limitation");
+
+    settings.endGroup();
+    settings.beginGroup("walls");
+
+    settings.endGroup();
+    settings.endGroup();
+
     settings.beginGroup("wildMonsters");
     settings.beginGroup("0");
     if(!settings.contains("comment"))
@@ -99,6 +113,7 @@ void SettingsAll::putDefaultSettings(QSettings &settings)
 void SettingsAll::populateSettings(QSettings &settings, SettingsAll::SettingsExtra& config)
 {
     config.displaycity=settings.value("displaycity").toBool();
+    config.displayregion=settings.value("displayregion").toBool();
     config.scale_City=settings.value("scale_City").toFloat();
     config.doallmap=settings.value("doallmap").toBool();
     config.maxCityLinks=settings.value("maxCityLinks").toUInt();
@@ -134,8 +149,85 @@ void SettingsAll::populateSettings(QSettings &settings, SettingsAll::SettingsExt
     mountain.tile = settings.value("mountain_tile").toString();
     mountain.tsx = settings.value("mountain_tsx").toString();
     LoadMapAll::mountain = mountain;
-
     settings.endGroup();
+    settings.endGroup();
+
+    RoomSetting room;
+    room.furnitures = std::vector<Furnitures> ();
+    room.limitations = std::vector<FurnituresLimitations> ();
+    room.walls = std::vector<RoomStructure>();
+
+    settings.beginGroup("room");
+    settings.beginGroup("furniture");
+    for(QString child: settings.childGroups()){
+        settings.beginGroup(child);
+
+        Furnitures f;
+        f.layer = settings.value("layer", "Collisions").toString();
+        f.offsetX = settings.value("offsetX", 0).toInt();
+        f.offsetY = settings.value("offsetY", 0).toInt();
+        f.width = settings.value("width", 1).toInt();
+        f.tags = settings.value("tags").toString().split(",");
+        f.templatePath = settings.value("template").toString();
+
+        if(settings.contains("tiles")){
+            f.tiles = settings.value("tiles").toString().split(",");
+            f.height = settings.value("height", f.tiles.size()/f.width).toInt();
+
+            if(f.tiles.size() == f.width*f.height)
+                room.furnitures.push_back(f);
+            else
+                std::cout << settings.value("tags").toString().toStdString() << " " << settings.value("tiles").toString().toStdString() << " " << f.layer.toStdString() << " " << f.offsetX << " " << f.offsetY << std::endl;
+        }else if(!f.templatePath.isEmpty()){
+            f.tiles = QStringList();
+            f.height = settings.value("height", 1).toInt();
+            room.furnitures.push_back(f);
+        }
+
+        settings.endGroup();
+    }
+    settings.endGroup();
+    settings.beginGroup("limitation");
+    for(QString child: settings.childGroups()){
+        settings.beginGroup(child);
+
+        FurnituresLimitations f;
+        f.tag = child;
+        f.min = settings.value("min", 1).toUInt();
+        f.max = settings.value("max", 1).toUInt();
+        f.chance = settings.value("chance", 0.5).toFloat();
+
+        room.limitations.push_back(f);
+        settings.endGroup();
+    }
+    settings.endGroup();
+    settings.beginGroup("walls");
+    for(QString child: settings.childGroups()){
+        settings.beginGroup(child);
+
+        RoomStructure f;
+        f.layer = settings.value("layer", "Collisions").toString();
+        f.offsetX = settings.value("offsetX", 0).toInt();
+        f.offsetY = settings.value("offsetY", 0).toInt();
+
+        if(settings.contains("tiles")){
+            f.tiles = settings.value("tiles").toString().split(",");
+            f.width = settings.value("width", 1).toInt();
+            f.height = settings.value("height", f.tiles.size()/f.width).toInt();
+
+            if(f.tiles.size() == f.width*f.height)
+                room.walls.push_back(f);
+            else
+                std::cout << settings.value("tiles").toString().toStdString() << " " << f.layer.toStdString() << " " << f.offsetX << " " << f.offsetY << std::endl;
+        }
+        settings.endGroup();
+    }
+    settings.endGroup();
+
+    room.floors = settings.value("floor").toString().split(",");
+    room.tilesets = settings.value("tileset").toString().split(",");
+    config.room = room;
+
     settings.endGroup();
 
     settings.beginGroup("wildMonsters");
@@ -229,6 +321,20 @@ void SettingsAll::populateSettings(QSettings &settings, SettingsAll::SettingsExt
                 QString line = in.readLine();
                 if(!line.isEmpty())
                     config.citiesNames.push_back(line.toStdString());
+            }
+            inputFile.close();
+        }
+    }
+    {
+        QFile inputFile("dialog.txt");
+        if(inputFile.open(QIODevice::ReadOnly))
+        {
+            QTextStream in(&inputFile);
+            while(!in.atEnd())
+            {
+                QString line = in.readLine();
+                if(!line.isEmpty())
+                    config.npcMessage.push_back(line.toStdString());
             }
             inputFile.close();
         }

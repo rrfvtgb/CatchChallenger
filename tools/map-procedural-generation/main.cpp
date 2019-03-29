@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
                 t.start();
                 LoadMapAll::addCity(tiledMap,gridCity,config.citiesNames,config.mapXCount,config.mapYCount,config.maxCityLinks,config.cityRadius,
                                     levelmap,config.levelmapscale,config.levelmapmin,config.levelmapmax,heightmap,moisuremap,noiseMapScaleMoisure,noiseMapScaleMap);
-                LoadMapAll::addCityContent(tiledMap,config.mapXCount,config.mapYCount,false);
+                //LoadMapAll::addCityContent(tiledMap,config.mapXCount,config.mapYCount,false);
                 qDebug("place cities took %d ms", t.elapsed());
                 if(config.dotransition)
                 {
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
                 TransitionTerrain::mergeDown(tiledMap);
                 qDebug("mergeDown took %d ms", t.elapsed());
                 t.start();
-                LoadMapAll::addCityContent(tiledMap, config.mapXCount, config.mapYCount,true);
+                //LoadMapAll::addCityContent(tiledMap, config.mapXCount, config.mapYCount,true);
                 LoadMapAll::addMapChange(tiledMap,config.mapXCount,config.mapYCount);
                 qDebug("add city content took %d ms", t.elapsed());
                 t.start();

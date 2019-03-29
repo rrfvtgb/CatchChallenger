@@ -152,7 +152,7 @@ void LoadMapAll::addBuildingChain(const std::string &baseName, const std::string
     doors.clear();
 }
 
-void LoadMapAll::loadMapTemplate(const char * folderName,MapBrush::MapTemplate &mapTemplate, const char * fileName, const unsigned int mapWidth, const unsigned int mapHeight, Tiled::Map &worldMap)
+void LoadMapAll::loadMapTemplate(const char * folderName, MapBrush::MapTemplate &mapTemplate, const QString &fileName, const unsigned int mapWidth, const unsigned int mapHeight, Tiled::Map &worldMap)
 {
     Tiled::Map *map=LoadMap::readMap(QString("template/")+QString(folderName)+fileName+".tmx");
     if((unsigned int)map->width()>mapWidth)
@@ -169,7 +169,7 @@ void LoadMapAll::loadMapTemplate(const char * folderName,MapBrush::MapTemplate &
     //reset the auto detection to grab ALL
     mapTemplate.x=0;
     mapTemplate.y=0;
-    mapTemplate.name=fileName;
+    mapTemplate.name=fileName.toStdString();
     mapTemplate.width=map->width();
     mapTemplate.height=map->height();
     //force collision layer
@@ -189,13 +189,13 @@ void LoadMapAll::loadMapTemplate(const char * folderName,MapBrush::MapTemplate &
     std::vector<Tiled::Map *> mapList;
     std::vector<std::string> mapToLoad;
     std::unordered_map<std::string,unsigned int> fileToIndex;
-    mapToLoad.push_back(fileName);
+    mapToLoad.push_back(fileName.toStdString());
     while(!mapToLoad.empty())
     {
         const std::string mapFile=mapToLoad.front();
         mapToLoad.erase(mapToLoad.cbegin());
         Tiled::Map *mapPointer;
-        if(mapFile==fileName)
+        if(mapFile==fileName.toStdString())
             mapPointer=map;
         else
         {
